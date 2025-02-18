@@ -1,9 +1,10 @@
 "use client";
 
-import { logout } from "@/app/login/actions";
+import { logout } from "@/app/(auth)/login/actions";
 import { createClient } from "@/utils/supabase/client";
 import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js"; // Import the User type
+import Link from "next/link";
 
 export default function SignInButton() {
   const [user, setUser] = useState<User | null>(null); // Explicitly type the user state
@@ -23,13 +24,30 @@ export default function SignInButton() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center">
-      {user ? <p>Hello {user.email?.split("@")[0]}</p> : <p>Not logged in</p>}
-      <button
-        onClick={logout}
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-        Logout
-      </button>
+    <div className="flex items-center justify-center space-x-4">
+      {user ? (
+        <>
+          {user.email && (
+            <p className="text-gray-700 font-medium">
+              {user.email.split("@")[0]}
+            </p>
+          )}
+          <button
+            onClick={async () => {
+              await logout();
+              setUser(null);
+            }}
+            className="bg-gray-800 text-white font-semibold py-2 px-6 rounded-lg hover:bg-gray-900 transition-all duration-200 ease-in-out shadow-md hover:shadow-lg">
+            Sign Out
+          </button>
+        </>
+      ) : (
+        <Link
+          href="/login"
+          className="bg-gray-800 text-white font-semibold py-2 px-6 rounded-lg hover:bg-gray-900 transition-all duration-200 ease-in-out shadow-md hover:shadow-lg">
+          Sign In
+        </Link>
+      )}
     </div>
   );
 }
