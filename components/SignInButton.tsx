@@ -8,6 +8,7 @@ import Link from "next/link";
 
 export default function SignInButton() {
   const [user, setUser] = useState<User | null>(null); // Explicitly type the user state
+  const [error, setError] = useState<string | null>(null); // State for error handling
 
   useEffect(() => {
     async function getUser() {
@@ -21,7 +22,7 @@ export default function SignInButton() {
       }
     }
     getUser();
-  }, []);
+  }, []); // Empty dependency array to run only once
 
   return (
     <div className="flex items-center justify-center space-x-4">
@@ -34,8 +35,13 @@ export default function SignInButton() {
           )}
           <button
             onClick={async () => {
-              await logout();
-              setUser(null);
+              try {
+                await logout();
+                setUser(null);
+              } catch (error) {
+                console.error("Logout failed:", error);
+                setError("Logout failed. Please try again.");
+              }
             }}
             className="bg-gray-800 text-white font-semibold py-2 px-6 rounded-lg hover:bg-gray-900 transition-all duration-200 ease-in-out shadow-md hover:shadow-lg">
             Sign Out
@@ -48,6 +54,7 @@ export default function SignInButton() {
           Sign In
         </Link>
       )}
+      {error && <p className="text-red-500">{error}</p>}
     </div>
   );
 }
