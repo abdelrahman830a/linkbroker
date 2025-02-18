@@ -25,25 +25,60 @@ export async function login(formData: FormData) {
     redirect('/')
 }
 
+// export async function signup(formData: FormData) {
+//     const supabase = await createClient()
+
+//     // type-casting here for convenience
+//     // in practice, you should validate your inputs
+//     const data = {
+//         email: formData.get('email') as string,
+//         password: formData.get('password') as string,
+//     }
+
+//     const { error } = await supabase.auth.signUp(data)
+
+//     if (error) {
+
+//         redirect('/error')
+
+//     }
+
+//     revalidatePath('/', 'layout')
+//     redirect('/')
+// }
+
+
 export async function signup(formData: FormData) {
     const supabase = await createClient()
 
     // type-casting here for convenience
-    // in practice, you should validate your inputs
-    const data = {
-        name: formData.get('name') as string,
-        email: formData.get('email') as string,
-        password: formData.get('password') as string,
+    const email = formData.get('email') as string
+    const password = formData.get('password') as string
+
+    // Basic validation before sending request
+    if (!email || !password) {
+        // Return an error page if email or password is missing
+        return redirect('/error?message=Email and password are required')
     }
 
-    const { error } = await supabase.auth.signUp(data)
+    // You can add further validation here (like email format check or password length)
 
-    if (error) {
-        redirect('/error')
+    try {
+        const { error } = await supabase.auth.signUp({ email, password })
+
+        if (error) {
+            // Return the error message as query parameter to show on the error page
+            return redirect(`/error?message=${encodeURIComponent(error.message)}`)
+        }
+
+        // After successful signup, revalidate and redirect
+        revalidatePath('/', 'layout')
+        return redirect('/')
+    } catch (err) {
+        // Catch any unexpected errors and redirect with a generic error message
+        console.error('Signup error:', err)
+        return redirect('/error?message=An unexpected error occurred')
     }
-
-    revalidatePath('/', 'layout')
-    redirect('/')
 }
 
 
