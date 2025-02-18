@@ -22,3 +22,7 @@ export type PixabayImage = {
     user: string;
     userImageURL: string;
 };
+
+export interface ImagesProps {
+    searchParams: { q?: string };
+}

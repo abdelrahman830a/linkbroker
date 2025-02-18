@@ -1,11 +1,11 @@
 import React from "react";
 import Image from "next/image";
 import Background from "@/public/background.jpg";
-import SignIn from "./signIn";
+import SignInButton from "./SignInButton";
 
 const NavbarWithBackground = () => {
   return (
-    <div className="relative w-full h-screen">
+    <div className="">
       {/* Background Image */}
       <Image
         src={Background}
@@ -16,14 +16,14 @@ const NavbarWithBackground = () => {
 
       {/* Navbar */}
       <div
-        className="rounded-lg bg-[rgba(217,217,217,0.12)] shadow-lg backdrop-blur-lg w-[1217.484px] h-[67.688px] flex-shrink-0 py-0 mx-auto"
+        className="rounded-lg bg-[rgba(217,217,217,0.12)] shadow-lg backdrop-blur-lg w-full max-w-screen-xl h-16 md:h-[67.688px] flex-shrink-0 py-0 mx-auto px-4 md:px-6"
         style={{
           boxShadow:
-            "inset 3.943px -3.943px 3.943px rgba(182, 182, 182, 0.43), inset -3.943px 3.943px 3.943px rgba(255, 255, 255, 0.43)",
+            "inset 3.943px -3.943px 3.943px rgba(182, 182, 182, 0.43), inset -3.943px 3.943px 3.943px rgba(255,255,255,0.43)",
         }}>
-        <nav className="flex flex-row justify-between items-center p-3 bg-transparent text-white w-full h-full">
+        <nav className="flex flex-row flex-wrap md:flex-nowrap justify-between items-center w-full h-full">
           <div className="flex">HomePage</div>
-          <SignIn />
+          <SignInButton />
         </nav>
       </div>
     </div>
