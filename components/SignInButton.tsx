@@ -43,18 +43,20 @@ export default function SignInButton() {
       {user ? (
         <>
           {user.email && (
-            <p className="text-white font-medium md:flex hidden">
-              {user.email.split("@")[0]}
-            </p>
+            <Link
+              href="/profile"
+              className="text-white font-medium bg-gray-800 py-2 px-4 sm:px-6 rounded-lg hover:bg-gray-900 transition-all duration-200 ease-in-out shadow-md hover:shadow-lg flex items-center text-sm sm:text-base">
+              Profile
+            </Link>
           )}
           <button
             onClick={handleSignOut}
-            className="bg-gray-800 text-white font-semibold py-2 px-6 rounded-lg hover:bg-gray-900 transition-all duration-200 ease-in-out shadow-md hover:shadow-lg"
+            className="bg-red-600 text-white font-semibold py-2 px-4 sm:px-6 rounded-lg hover:bg-red-700 transition-all duration-200 ease-in-out shadow-md hover:shadow-lg items-center justify-center gap-2 w-full sm:w-auto hidden md:flex"
             disabled={loading} // Disable the button while loading
           >
             {loading ? (
               <svg
-                className="animate-spin h-5 w-5 text-white mr-3"
+                className="animate-spin h-5 w-5 text-white"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"

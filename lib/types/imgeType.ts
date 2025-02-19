@@ -26,3 +26,16 @@ export type PixabayImage = {
 export interface SearchProps {
     searchParams: { q?: string };
 }
+
+export const tabs = [
+    "Cars",
+    "Horse",
+    "Music",
+    "Movies",
+    "Travel",
+    "Nature",
+    "Company",
+    "Fashion",
+    "Flowers",
+    "Technology",
+];
