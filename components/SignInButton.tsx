@@ -43,7 +43,7 @@ export default function SignInButton() {
       {user ? (
         <>
           {user.email && (
-            <p className="text-gray-700 font-medium md:flex hidden">
+            <p className="text-white font-medium md:flex hidden">
               {user.email.split("@")[0]}
             </p>
           )}
