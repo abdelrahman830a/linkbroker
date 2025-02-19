@@ -29,7 +29,7 @@ export interface SearchProps {
 
 export const tabs = [
     "Cars",
-    "Horse",
+    "Speed",
     "Music",
     "Movies",
     "Travel",
@@ -37,5 +37,5 @@ export const tabs = [
     "Company",
     "Fashion",
     "Flowers",
-    "Technology",
+    "Tech",
 ];

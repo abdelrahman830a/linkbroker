@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import Masonry from "react-masonry-css"; // <-- Import Masonry
 
 const SearchImages = ({ searchParams }: SearchProps) => {
   const router = useRouter();
@@ -13,7 +14,8 @@ const SearchImages = ({ searchParams }: SearchProps) => {
   const [searchValue, setSearchValue] = useState(queryParam);
   const [imagesData, setImagesData] = useState<PixabayImage[] | null>(null);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({}); // Store favorite status
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  // Hold the full image object in state for the modal.
+  const [selectedImage, setSelectedImage] = useState<PixabayImage | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [user, setUser] = useState<any>(null); // Track logged-in user
 
@@ -22,6 +24,7 @@ const SearchImages = ({ searchParams }: SearchProps) => {
       if (searchValue.trim() === "") return; // Prevent empty requests
 
       const data = await fetchImages(searchValue);
+      console.log(data.hits);
       setImagesData(data?.hits || []);
     }, 500); // Adjust delay as needed
 
@@ -51,7 +54,7 @@ const SearchImages = ({ searchParams }: SearchProps) => {
         .select("image_id")
         .eq("user_id", user.id);
 
-      if (!error) {
+      if (!error && data) {
         const favoriteMap = data.reduce(
           (acc, fav) => ({
             ...acc,
@@ -109,8 +112,16 @@ const SearchImages = ({ searchParams }: SearchProps) => {
     });
   };
 
+  // Define breakpoint columns for Masonry
+  const breakpointColumnsObj = {
+    default: 4,
+    1100: 3,
+    768: 2,
+    500: 1,
+  };
+
   return (
-    <div className="min-h-screen text-white overflow-x-hidden relative py-6">
+    <div className="min-h-screen text-white overflow-x-hidden relative py-6 mx-auto">
       {/* Header Section */}
       <div className="flex flex-col items-center justify-center py-8 space-y-4 md:space-y-8 text-white relative px-4">
         <h1 className="text-center text-white text-4xl md:text-5xl lg:text-6xl font-bold leading-tight md:leading-[87.638px] md:max-w-4xl">
@@ -148,22 +159,24 @@ const SearchImages = ({ searchParams }: SearchProps) => {
         ))}
       </div>
 
-      {/* Image Grid Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 max-w-screen-xl mx-auto pb-10 relative mt-8 pt-5 px-4 sm:px-0">
+      {/* Masonry Image Grid Section */}
+      <Masonry
+        breakpointCols={breakpointColumnsObj}
+        className="my-masonry-grid w-full mx-auto pb-10 relative mt-8 pt-5 px-4 sm:px-0"
+        columnClassName="my-masonry-grid_column">
         {imagesData?.map((image) => (
           <div
             key={image.id}
             className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 ease-in-out transform hover:scale-105 relative">
             <div
               className="cursor-pointer relative aspect-w-16 aspect-h-9"
-              onClick={() => setSelectedImage(image.largeImageURL)}>
+              onClick={() => setSelectedImage(image)}>
               <Image
                 src={image.webformatURL}
                 alt={image.tags}
                 className="object-cover"
                 width={image.imageWidth}
                 height={image.imageHeight}
-                layout="responsive"
               />
             </div>
 
@@ -213,14 +226,42 @@ const SearchImages = ({ searchParams }: SearchProps) => {
             </div>
           </div>
         ))}
-      </div>
+      </Masonry>
 
-      {/* Modal for Enlarged Image */}
+      {/* Modal for Enlarged Image with Additional Details */}
       {selectedImage && (
         <div
-          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-90 z-50"
+          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-90 z-50 overflow-auto"
           onClick={() => setSelectedImage(null)}>
-          <div className="relative max-w-screen-lg">
+          <div
+            className="relative max-w-screen-lg mx-auto p-4 bg-gray-800 rounded-lg flex flex-col md:flex-row gap-4"
+            onClick={(e) => e.stopPropagation()}>
+            {/* Download Button */}
+            <button
+              className="absolute top-4 left-4 bg-gray-900 bg-opacity-80 text-white p-3 rounded-full hover:bg-opacity-100 transition duration-300"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDownload(
+                  selectedImage.largeImageURL,
+                  "downloaded_image.jpg"
+                );
+              }}
+              title="Download">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-8 w-8"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4 16v2a3 3 0 003 3h10a3 3 0 003-3v-2m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>
+            </button>
+
             {/* Close Button */}
             <button
               className="absolute top-4 right-4 bg-gray-900 bg-opacity-80 text-white p-3 rounded-full hover:bg-opacity-100 transition duration-300"
@@ -241,39 +282,61 @@ const SearchImages = ({ searchParams }: SearchProps) => {
               </svg>
             </button>
 
-            <Image
-              src={selectedImage}
-              alt="Enlarged Image"
-              width={800}
-              height={600}
-              className="rounded-lg max-w-full max-h-screen"
-            />
+            {/* Left Column: Enlarged Image */}
+            <div className="w-full md:w-1/2 flex-shrink-0">
+              <Image
+                src={selectedImage.largeImageURL}
+                alt={selectedImage.tags}
+                width={800}
+                height={600}
+                className="rounded-lg max-w-full max-h-screen object-cover"
+              />
+            </div>
 
-            {/* Download Button */}
-            <button
-              className="absolute top-4 left-4 bg-gray-900 bg-opacity-80 text-white p-3 rounded-full hover:bg-opacity-100 transition duration-300"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDownload(selectedImage, "downloaded_image.jpg");
-              }}
-              title="Download">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-8 w-8"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}>
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4 16v2a3 3 0 003 3h10a3 3 0 003-3v-2m-4-4l-4 4m0 0l-4-4m4 4V4"
-                />
-              </svg>
-            </button>
+            {/* Right Column: Additional Details */}
+            <div className="w-full md:w-1/2 text-white flex flex-col gap-3 overflow-auto">
+              <p>
+                <strong>ID:</strong> {selectedImage.id}
+              </p>
+              <p>
+                <strong>User:</strong> {selectedImage.user}
+              </p>
+              <p>
+                <strong>Type:</strong> {selectedImage.type}
+              </p>
+              <p>
+                <strong>Tags:</strong> {selectedImage.tags}
+              </p>
+              <p>
+                <strong>Views:</strong> {selectedImage.views}
+              </p>
+              <p>
+                <strong>Downloads:</strong> {selectedImage.downloads}
+              </p>
+              <p>
+                <strong>Likes:</strong> {selectedImage.likes}
+              </p>
+              {/* Add any additional information you need */}
+            </div>
           </div>
         </div>
       )}
+
+      {/* Global Styles for Masonry */}
+      <style jsx global>{`
+        .my-masonry-grid {
+          display: flex;
+          margin-left: -16px; /* adjust gap */
+          width: auto;
+        }
+        .my-masonry-grid_column {
+          padding-left: 16px; /* adjust gap */
+          background-clip: padding-box;
+        }
+        .my-masonry-grid_column > div {
+          margin-bottom: 16px; /* adjust gap between items */
+        }
+      `}</style>
     </div>
   );
 };

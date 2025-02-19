@@ -1,39 +1,102 @@
 "use client";
 import { useState } from "react";
+import { z } from "zod";
 import { login, signup } from "./actions";
+
+const LoginSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  password: z
+    .string()
+    .min(6, { message: "Password must be at least 6 characters." }),
+});
 
 export default function LoginPage() {
   const [loadingLogin, setLoadingLogin] = useState(false);
   const [loadingSignup, setLoadingSignup] = useState(false);
+  const [formErrors, setFormErrors] = useState<{
+    email?: string;
+    password?: string;
+  }>({});
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  // Validate form data with Zod
+  const validateForm = (form: HTMLFormElement) => {
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    const typedData = {
+      email: String(data.email || ""),
+      password: String(data.password || ""),
+    };
+
+    const result = LoginSchema.safeParse(typedData);
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        const field = err.path[0];
+        if (typeof field === "string") {
+          errors[field] = err.message;
+        }
+      });
+      setFormErrors(errors);
+      return false;
+    } else {
+      setFormErrors({});
+      return true;
+    }
+  };
 
   const handleLogin = async (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
     event.preventDefault();
-    setLoadingLogin(true);
+    setServerError(null); // Clear any previous server errors
     const form = (event.target as HTMLButtonElement).form;
     if (form) {
-      await login(new FormData(form));
+      if (!validateForm(form)) return;
+
+      setLoadingLogin(true);
+      try {
+        await login(new FormData(form));
+      } catch (error) {
+        if (error instanceof Error) setServerError(error.message);
+        else setServerError("An unknown error occurred.");
+      }
+      setLoadingLogin(false);
     }
-    setLoadingLogin(false);
   };
 
   const handleSignup = async (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
     event.preventDefault();
-    setLoadingSignup(true);
+    setServerError(null); // Clear any previous server errors
     const form = (event.target as HTMLButtonElement).form;
     if (form) {
-      await signup(new FormData(form));
+      if (!validateForm(form)) return;
+
+      setLoadingSignup(true);
+      try {
+        await signup(new FormData(form));
+      } catch (error) {
+        if (error instanceof Error) {
+          setServerError(error.message);
+        } else {
+          setServerError("An unknown error occurred.");
+        }
+      }
+      setLoadingSignup(false);
     }
-    setLoadingSignup(false);
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <form className="bg-white p-6 rounded-lg shadow-lg w-80">
         <h2 className="text-2xl font-bold text-center mb-4">Welcome</h2>
+
+        {/* Display any server error */}
+        {serverError && (
+          <p className="text-red-500 text-center mb-4">{serverError}</p>
+        )}
 
         <label
           htmlFor="email"
@@ -47,6 +110,9 @@ export default function LoginPage() {
           required
           className="w-full p-2 mt-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+        {formErrors.email && (
+          <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>
+        )}
 
         <label
           htmlFor="password"
@@ -60,6 +126,9 @@ export default function LoginPage() {
           required
           className="w-full p-2 mt-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+        {formErrors.password && (
+          <p className="text-red-500 text-xs mt-1">{formErrors.password}</p>
+        )}
 
         <div className="mt-4 flex justify-between">
           <button

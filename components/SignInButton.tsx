@@ -1,6 +1,6 @@
 "use client";
 
-import { logout } from "@/app/(auth)/login/actions";
+import { logout } from "@/app/login/actions";
 import { createClient } from "@/utils/supabase/client";
 import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js"; // Import the User type

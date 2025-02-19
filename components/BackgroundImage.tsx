@@ -6,14 +6,18 @@ import SearchImages from "./SearchImages";
 
 const NavbarWithBackground = () => {
   return (
-    <div className="p-10 h-[100vh] top-0 left-0 bottom-0 right-0 z-[-1]">
+    <div className="relative w-full h-screen p-10">
       {/* Background Image */}
-      <Image
-        src={Background}
-        alt="hero"
-        className="w-full h-full object-cover"
-        layout="fill"
-      />
+      <div className="fixed inset-0 -z-10">
+        <Image
+          src={Background}
+          alt="hero"
+          layout="fill"
+          objectFit="cover"
+          priority
+        />
+      </div>
+
       {/* Navbar */}
       <div
         className="rounded-lg bg-[rgba(217,217,217,0.12)] shadow-lg backdrop-blur-lg w-full max-w-screen-xl h-16 md:h-[67.688px] flex-shrink-0 py-0 mx-auto px-4 md:px-6 flex items-center justify-between"
