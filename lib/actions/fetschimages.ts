@@ -1,4 +1,4 @@
-export default async function fetchImages(query: string = "horse") {
+export default async function fetchImages(query: string) {
     const API_KEY = "48913900-daceda5a36d735c189de9c5c0";
     const URL = `https://pixabay.com/api/?key=${API_KEY}&q=${encodeURIComponent(query)}&per_page=8`;
 

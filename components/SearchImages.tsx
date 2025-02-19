@@ -8,7 +8,7 @@ import React, { useEffect, useState } from "react";
 
 const SearchImages = ({ searchParams }: SearchProps) => {
   const router = useRouter();
-  const queryParam = searchParams?.q || ""; // Default query if none is provided
+  const queryParam = searchParams?.q || "horse"; // Default query if none is provided
   const [searchValue, setSearchValue] = useState(queryParam);
   const [imagesData, setImagesData] = useState<PixabayImage[] | null>(null);
 
