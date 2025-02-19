@@ -103,18 +103,10 @@ const SearchImages = ({ searchParams }: SearchProps) => {
     }));
 
     // Sync with database
-    const { error } = await toggleFavorite({
+    await toggleFavorite({
       id: image.id.toString(),
       webformatURL: image.webformatURL,
     });
-
-    // Revert if there's an error
-    if (error) {
-      setFavorites((prev) => ({
-        ...prev,
-        [image.id]: !prev[image.id],
-      }));
-    }
   };
 
   return (
