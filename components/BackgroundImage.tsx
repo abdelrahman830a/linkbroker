@@ -22,7 +22,7 @@ const NavbarWithBackground = () => {
             "inset 3.943px -3.943px 3.943px rgba(182, 182, 182, 0.43), inset -3.943px 3.943px 3.943px rgba(255,255,255,0.43)",
         }}>
         <nav className="flex flex-row flex-wrap md:flex-nowrap justify-between items-center w-full h-full">
-          <div className="flex">HomePage</div>
+          <div className="flex text-white">HomePage</div>
           <SignInButton />
         </nav>
       </div>

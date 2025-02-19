@@ -47,7 +47,9 @@ const SearchImages = ({ searchParams }: SearchProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+    <div
+      className="min-h-screen text-white bg-gray-900 relative overflow-x-hidden
+    ">
       {/* Header Section */}
       <div className="flex flex-col items-center justify-center py-10 space-y-4 md:space-y-5 text-white relative px-4">
         <h1 className="text-center text-white text-4xl md:text-5xl lg:text-6xl font-bold leading-tight md:leading-[87.638px] shadow-[0px_3.563px_3.563px_rgba(0,0,0,0.25)]">
