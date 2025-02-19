@@ -8,6 +8,7 @@ import Image from "next/image";
 import { logout } from "../login/actions";
 import Masonry from "react-masonry-css";
 import { fetchImageById } from "@/lib/actions/fetschimages";
+import { ImageDetails } from "@/lib/types/imgeType";
 
 const ProfilePage = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -17,7 +18,8 @@ const ProfilePage = () => {
   >([]);
   const [loading, setLoading] = useState<boolean>(false);
   // For the modal, we now store the full image details from Pixabay.
-  const [selectedImage, setSelectedImage] = useState<any>(null);
+
+  const [selectedImage, setSelectedImage] = useState<ImageDetails | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {

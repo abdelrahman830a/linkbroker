@@ -39,3 +39,14 @@ export const tabs = [
     "Flowers",
     "Tech",
 ];
+
+export interface ImageDetails {
+    id: string;
+    webformatURL: string;
+    largeImageURL: string;
+    tags: string;
+    user: string;
+    downloads: number;
+    views: number;
+    likes: number;
+}
