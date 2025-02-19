@@ -58,8 +58,8 @@ export default function LoginPage() {
       try {
         await login(new FormData(form));
       } catch (error) {
-        if (error instanceof Error) setServerError(error.message);
-        else setServerError("An unknown error occurred.");
+        setServerError("Invalid Credentials");
+        console.log(error);
       }
       setLoadingLogin(false);
     }
@@ -78,11 +78,8 @@ export default function LoginPage() {
       try {
         await signup(new FormData(form));
       } catch (error) {
-        if (error instanceof Error) {
-          setServerError(error.message);
-        } else {
-          setServerError("An unknown error occurred.");
-        }
+        setServerError("User Already Exists.");
+        console.log(error);
       }
       setLoadingSignup(false);
     }
