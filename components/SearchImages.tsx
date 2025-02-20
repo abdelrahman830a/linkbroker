@@ -6,68 +6,65 @@ import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import Masonry from "react-masonry-css"; // <-- Import Masonry
+import Masonry from "react-masonry-css";
 
 const SearchImages = ({ searchParams }: SearchProps) => {
   const router = useRouter();
-  const queryParam = searchParams?.q || "horse"; // Default query if none is provided
+  const queryParam = searchParams?.q || "horse";
   const [searchValue, setSearchValue] = useState(queryParam);
   const [imagesData, setImagesData] = useState<PixabayImage[] | null>(null);
-  const [favorites, setFavorites] = useState<Record<string, boolean>>({}); // Store favorite status
-  // Hold the full image object in state for the modal.
+  const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [selectedImage, setSelectedImage] = useState<PixabayImage | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [user, setUser] = useState<any>(null); // Track logged-in user
+  const [user, setUser] = useState<any>(null);
+  // State to track the currently selected resolution URL in the modal
+  const [selectedResolution, setSelectedResolution] = useState<string>("");
+
+  // When a new image is selected, default to its large resolution
+  useEffect(() => {
+    if (selectedImage) {
+      setSelectedResolution(selectedImage.largeImageURL);
+    }
+  }, [selectedImage]);
 
   useEffect(() => {
     const delayDebounce = setTimeout(async () => {
-      if (searchValue.trim() === "") return; // Prevent empty requests
-
+      if (searchValue.trim() === "") return;
       const data = await fetchImages(searchValue);
-      console.log(data.hits);
       setImagesData(data?.hits || []);
-    }, 500); // Adjust delay as needed
-
-    return () => clearTimeout(delayDebounce); // Cleanup function
+    }, 500);
+    return () => clearTimeout(delayDebounce);
   }, [searchValue]);
 
   useEffect(() => {
-    // Fetch user session from Supabase
     const fetchUser = async () => {
       const supabase = createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      setUser(user); // Set user state
+      setUser(user);
     };
-
     fetchUser();
   }, []);
 
   useEffect(() => {
     const fetchFavorites = async () => {
       if (!user) return;
-
       const supabase = createClient();
       const { data, error } = await supabase
         .from("favorites")
         .select("image_id")
         .eq("user_id", user.id);
-
       if (!error && data) {
         const favoriteMap = data.reduce(
-          (acc, fav) => ({
-            ...acc,
-            [fav.image_id]: true,
-          }),
+          (acc, fav) => ({ ...acc, [fav.image_id]: true }),
           {}
         );
         setFavorites(favoriteMap);
       }
     };
-
     fetchFavorites();
-  }, [user]); // Re-run when user changes
+  }, [user]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(e.target.value);
@@ -79,7 +76,7 @@ const SearchImages = ({ searchParams }: SearchProps) => {
   };
 
   const handleTabClick = (tabName: string) => {
-    setSearchValue(tabName); // Update search value when a tab is clicked
+    setSearchValue(tabName);
   };
 
   const handleDownload = (imageUrl: string, imageName: string) => {
@@ -98,14 +95,7 @@ const SearchImages = ({ searchParams }: SearchProps) => {
 
   const handleToggleFavorite = async (image: PixabayImage) => {
     if (!user) return;
-
-    // Optimistically update UI
-    setFavorites((prev) => ({
-      ...prev,
-      [image.id]: !prev[image.id],
-    }));
-
-    // Sync with database
+    setFavorites((prev) => ({ ...prev, [image.id]: !prev[image.id] }));
     await toggleFavorite({
       id: image.id.toString(),
       webformatURL: image.webformatURL,
@@ -144,14 +134,14 @@ const SearchImages = ({ searchParams }: SearchProps) => {
       </div>
 
       {/* Tabs Section */}
-      <div className="flex gap-2 flex-wrap bg-gray-800 p-4 justify-center mx-auto">
+      <div className="flex gap-2 flex-wrap bg-gray-300 p-4 justify-center mx-auto">
         {tabs.map((tab) => (
           <button
             key={tab}
             onClick={() => handleTabClick(tab)}
-            className={`px-4 sm:px-8 py-2 sm:py-4 mx-auto rounded-xs bg-gray-400 border-gray-500 text-black hover:bg-gray-500 transition-all ${
+            className={`px-4 sm:px-8 py-2 sm:py-4 mx-auto rounded bg-white border border-gray-400 text-black hover:bg-gray-100 transition-all ${
               searchValue.toLowerCase() === tab.toLowerCase()
-                ? "ring-2 ring-white ring-opacity-50"
+                ? "ring-1 ring-black/60"
                 : ""
             }`}>
             {tab}
@@ -167,25 +157,23 @@ const SearchImages = ({ searchParams }: SearchProps) => {
         {imagesData?.map((image) => (
           <div
             key={image.id}
-            className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 ease-in-out transform hover:scale-105 relative">
+            className="bg-gray-800 rounded-lg overflow-hidden shadow-lg relative">
             <div
-              className="cursor-pointer relative aspect-w-16 aspect-h-9"
+              className="cursor-pointer relative aspect-w-16 aspect-h-9 overflow-hidden"
               onClick={() => setSelectedImage(image)}>
               <Image
                 src={image.webformatURL}
                 alt={image.tags}
-                className="object-cover"
+                className="object-cover transition-transform duration-300 ease-in-out transform hover:scale-105"
                 width={image.imageWidth}
                 height={image.imageHeight}
               />
             </div>
-
             <div className="p-4">
               <p className="text-sm text-gray-300">By: {image.user}</p>
               <h1 className="text-lg font-semibold text-white mt-2">
                 {image.tags.split(",").slice(0, 4).join(", ")}
               </h1>
-
               {/* Favorite Image */}
               {user && (
                 <button
@@ -236,15 +224,27 @@ const SearchImages = ({ searchParams }: SearchProps) => {
           <div
             className="relative max-w-screen-lg mx-auto p-4 bg-gray-800 rounded-lg flex flex-col md:flex-row gap-4"
             onClick={(e) => e.stopPropagation()}>
+            {/* Resolution Dropdown */}
+            <div className="absolute top-4 left-4">
+              <select
+                className="bg-gray-700 text-white p-2 rounded-md"
+                value={selectedResolution}
+                onChange={(e) => setSelectedResolution(e.target.value)}>
+                <option value={selectedImage.largeImageURL}>High</option>
+                <option value={selectedImage.webformatURL}>Medium</option>
+                {/* Add additional resolutions if available, e.g.: */}
+                {selectedImage.previewURL && (
+                  <option value={selectedImage.previewURL}>Low</option>
+                )}
+              </select>
+            </div>
+
             {/* Download Button */}
             <button
-              className="absolute top-4 left-4 bg-gray-900 bg-opacity-80 text-white p-3 rounded-full hover:bg-opacity-100 transition duration-300"
+              className="absolute top-4 right-20 bg-gray-900 bg-opacity-80 text-white p-3 rounded-full hover:bg-opacity-100 transition duration-300"
               onClick={(e) => {
                 e.stopPropagation();
-                handleDownload(
-                  selectedImage.largeImageURL,
-                  "downloaded_image.jpg"
-                );
+                handleDownload(selectedResolution, "downloaded_image.jpg");
               }}
               title="Download">
               <svg
@@ -285,7 +285,7 @@ const SearchImages = ({ searchParams }: SearchProps) => {
             {/* Left Column: Enlarged Image */}
             <div className="w-full md:w-1/2 flex-shrink-0">
               <Image
-                src={selectedImage.largeImageURL}
+                src={selectedResolution}
                 alt={selectedImage.tags}
                 width={800}
                 height={600}
@@ -316,7 +316,6 @@ const SearchImages = ({ searchParams }: SearchProps) => {
               <p>
                 <strong>Likes:</strong> {selectedImage.likes}
               </p>
-              {/* Add any additional information you need */}
             </div>
           </div>
         </div>

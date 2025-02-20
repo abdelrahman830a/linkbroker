@@ -12,14 +12,22 @@ import { ImageDetails } from "@/lib/types/imgeType";
 
 const ProfilePage = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  // Your favorites data from Supabase only includes image_id and image_url.
   const [favorites, setFavorites] = useState<
     { image_id: string; image_url: string }[]
   >([]);
   const [loading, setLoading] = useState<boolean>(false);
-  // For the modal, we now store the full image details from Pixabay.
-
   const [selectedImage, setSelectedImage] = useState<ImageDetails | null>(null);
+  // Track the currently selected resolution URL for the modal.
+  const [selectedResolution, setSelectedResolution] = useState<string>("");
+
+  // When a new image is selected, default to its large resolution.
+  useEffect(() => {
+    if (selectedImage) {
+      setSelectedResolution(
+        selectedImage.largeImageURL || selectedImage.webformatURL
+      );
+    }
+  }, [selectedImage]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -38,7 +46,7 @@ const ProfilePage = () => {
     fetchUserData();
   }, []);
 
-  // Handle Unfavorite
+  // Handle unfavorite action.
   const handleUnfavorite = async (imageId: string) => {
     const supabase = createClient();
     const {
@@ -51,7 +59,7 @@ const ProfilePage = () => {
     setFavorites((prev) => prev.filter((fav) => fav.image_id !== imageId));
   };
 
-  // Handle Download
+  // Handle download using the selected resolution.
   const handleDownload = (imageUrl: string, imageName: string) => {
     fetch(imageUrl)
       .then((response) => response.blob())
@@ -77,7 +85,7 @@ const ProfilePage = () => {
     }
   };
 
-  // Define breakpoint columns for Masonry
+  // Define breakpoint columns for Masonry.
   const breakpointColumnsObj = {
     default: 4,
     1100: 3,
@@ -165,7 +173,7 @@ const ProfilePage = () => {
               <div
                 className="cursor-pointer"
                 onClick={async () => {
-                  // Fetch additional details for this image from Pixabay.
+                  // Fetch additional details for this image.
                   const details = await fetchImageById(fav.image_id);
                   setSelectedImage(details);
                 }}>
@@ -202,7 +210,7 @@ const ProfilePage = () => {
         )}
       </Masonry>
 
-      {/* Image Modal with Details */}
+      {/* Image Modal with Details and Resolution Selection */}
       {selectedImage && (
         <div
           className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-90 z-50 overflow-auto"
@@ -210,31 +218,23 @@ const ProfilePage = () => {
           <div
             className="relative max-w-5xl mx-auto p-4 bg-gray-800 rounded-lg flex flex-col md:flex-row gap-4"
             onClick={(e) => e.stopPropagation()}>
-            {/* Download Button */}
-            <button
-              className="absolute top-4 left-4 bg-gray-900 bg-opacity-80 text-white p-3 rounded-full hover:bg-opacity-100 transition duration-300"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDownload(
-                  selectedImage.webformatURL,
-                  `image_${selectedImage.id}.jpg`
-                );
-              }}
-              title="Download">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-8 w-8"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}>
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4 16v2a3 3 0 003 3h10a3 3 0 003-3v-2m-4-4l-4 4m0 0l-4-4m4 4V4"
-                />
-              </svg>
-            </button>
+            {/* Controls Container */}
+            <div className="absolute top-4 left-4 flex items-center space-x-4">
+              <select
+                className="bg-gray-800 border border-gray-600 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={selectedResolution}
+                onChange={(e) => setSelectedResolution(e.target.value)}>
+                {selectedImage.largeImageURL && (
+                  <option value={selectedImage.largeImageURL}>High</option>
+                )}
+                {selectedImage.webformatURL && (
+                  <option value={selectedImage.webformatURL}>Medium</option>
+                )}
+                {selectedImage.previewURL && (
+                  <option value={selectedImage.previewURL}>Low</option>
+                )}
+              </select>
+            </div>
 
             {/* Close Button */}
             <button
@@ -256,10 +256,32 @@ const ProfilePage = () => {
               </svg>
             </button>
 
+            {/* Download button */}
+            <button
+              className="absolute top-4 right-20 bg-gray-900 bg-opacity-80 text-white p-3 rounded-full hover:bg-opacity-100 transition duration-300"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDownload(selectedResolution, "downloaded_image.jpg");
+              }}
+              title="Download">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-8 w-8"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4 16v2a3 3 0 003 3h10a3 3 0 003-3v-2m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>
+            </button>
             {/* Left Column: Enlarged Image */}
             <div className="w-full md:w-1/2 flex-shrink-0">
               <Image
-                src={selectedImage.largeImageURL || selectedImage.webformatURL}
+                src={selectedResolution}
                 alt={selectedImage.tags}
                 width={800}
                 height={600}
@@ -302,7 +324,7 @@ const ProfilePage = () => {
         .my-masonry-grid {
           display: flex;
           margin-left: -16px; /* gutter size offset */
-          width: 100%; /* fill the available space */
+          width: 100%;
         }
         .my-masonry-grid_column {
           padding-left: 16px; /* gutter size */
