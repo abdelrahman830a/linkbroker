@@ -49,4 +49,5 @@ export interface ImageDetails {
     downloads: number;
     views: number;
     likes: number;
+    previewURL?: string;
 }
